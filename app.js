@@ -1,249 +1,455 @@
-let todos = [];
-let todoId = 0;
-
-/* 상태 */
-let currentFilter = "all";
-let selectedDate = new Date();
-
-/* 기준 주 시작 */
-let weekStartDate = getWeekStart(new Date());
-
-/* DOM */
+// ===== DOM 요소 =====
 const todoInput = document.getElementById("todoInput");
 const addButton = document.getElementById("addButton");
 const todoList = document.getElementById("todoList");
 const errorMessage = document.getElementById("errorMessage");
+const emptyState = document.getElementById("emptyState");
+const prevWeekButton = document.getElementById("prevWeekButton");
+const nextWeekButton = document.getElementById("nextWeekButton");
+const weekGrid = document.getElementById("weekGrid");
+const selectedDateDisplay = document.getElementById("selectedDateDisplay");
+const filterButtons = document.querySelectorAll(".filter-btn");
 
+// 뷰 전환
+const weekViewBtn = document.getElementById("weekViewBtn");
+const monthViewBtn = document.getElementById("monthViewBtn");
 const weekView = document.getElementById("weekView");
-const weekRangeText = document.getElementById("weekRangeText");
-const prevWeekBtn = document.getElementById("prevWeekBtn");
-const nextWeekBtn = document.getElementById("nextWeekBtn");
+const monthView = document.getElementById("monthView");
+const prevMonthButton = document.getElementById("prevMonthButton");
+const nextMonthButton = document.getElementById("nextMonthButton");
+const monthTitle = document.getElementById("monthTitle");
+const monthGrid = document.getElementById("monthGrid");
 
-const tabs = document.querySelectorAll(".tab");
+// 소감 일기
+const speechBubble = document.getElementById("speechBubble");
+const diaryText = document.getElementById("diaryText");
+const diaryEditBtn = document.getElementById("diaryEditBtn");
+const diaryInputWrapper = document.getElementById("diaryInputWrapper");
+const diaryInput = document.getElementById("diaryInput");
+const diarySaveBtn = document.getElementById("diarySaveBtn");
 
-/* =========================
-   LocalStorage
-========================= */
-const STORAGE_KEY = "todos_week_app";
+// ===== 상태 변수 =====
+let todos = loadTodosFromStorage();
+let diaries = loadDiariesFromStorage(); // 날짜별 소감 저장
+let selectedDate = formatDateKey(new Date());
+let weekOffset = 0;
+let monthOffset = 0; // 월간 뷰 오프셋
+let activeFilter = "all";
+let currentView = "week"; // 'week' | 'month'
 
-function saveToLocalStorage() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ todos, todoId }));
+// ===== 날짜 유틸 =====
+
+function formatDateKey(date) {
+  return date.toLocaleDateString("sv-SE");
 }
 
-function loadFromLocalStorage() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) return;
-
-  const parsed = JSON.parse(data);
-  todos = parsed.todos || [];
-  todoId = parsed.todoId || 0;
+function formatDateDisplay(dateKey) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  });
 }
 
-/* =========================
-   날짜 유틸
-========================= */
-function formatDate(date) {
-  return date.toISOString().split("T")[0];
+function getMondayOfWeek(offset) {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diffToMonday + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
 }
 
-function getWeekStart(date) {
-  const d = new Date(date);
-  const day = d.getDay(); // 0:일
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일 기준
-  return new Date(d.setDate(diff));
+function getWeekDates(offset) {
+  const monday = getMondayOfWeek(offset);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return formatDateKey(d);
+  });
 }
 
-/* =========================
-   주간 뷰 생성
-========================= */
-function renderWeekView() {
-  weekView.innerHTML = "";
+// ===== 로컬스토리지 =====
 
-  const todayStr = formatDate(new Date());
+function saveTodosToStorage() {
+  localStorage.setItem("todos", JSON.stringify(todos));
+}
 
-  let start = new Date(weekStartDate);
-  let end = new Date(start);
-  end.setDate(start.getDate() + 6);
+function loadTodosFromStorage() {
+  return JSON.parse(localStorage.getItem("todos")) || [];
+}
 
-  weekRangeText.textContent =
-    `${formatDate(start)} ~ ${formatDate(end)}`;
+// 소감(diary)도 날짜를 key로 객체에 저장
+function saveDiariesToStorage() {
+  localStorage.setItem("diaries", JSON.stringify(diaries));
+}
 
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(start);
-    date.setDate(start.getDate() + i);
+function loadDiariesFromStorage() {
+  return JSON.parse(localStorage.getItem("diaries")) || {};
+}
 
-    const dateStr = formatDate(date);
+// ===== 소감 렌더링 =====
+// 선택된 날짜의 소감을 말풍선에 표시
+function renderDiary() {
+  const text = diaries[selectedDate];
+  if (text) {
+    // 소감이 있으면 텍스트 + 수정 + 삭제 버튼
+    diaryText.textContent = text;
 
-    const count = todos.filter(t => t.date === dateStr).length;
-
-    const dayDiv = document.createElement("div");
-    dayDiv.className = "day";
-
-    if (dateStr === formatDate(selectedDate)) {
-      dayDiv.classList.add("active");
+    // 삭제 버튼이 없으면 추가
+    if (!document.getElementById("diaryDeleteBtn")) {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "diary-edit-btn";
+      deleteBtn.id = "diaryDeleteBtn";
+      deleteBtn.textContent = "🗑️";
+      deleteBtn.addEventListener("click", deleteDiary);
+      speechBubble.appendChild(deleteBtn);
     }
-
-    if (dateStr === todayStr) {
-      dayDiv.classList.add("today");
-    }
-
-    dayDiv.innerHTML = `
-      <div>${["일","월","화","수","목","금","토"][date.getDay()]}</div>
-      <div>${date.getDate()}</div>
-      <div class="count">${count}</div>
-    `;
-
-    dayDiv.addEventListener("click", () => {
-      selectedDate = new Date(date);
-      renderWeekView();
-      renderTodos();
-    });
-
-    weekView.appendChild(dayDiv);
+  } else {
+    // 소감 없으면 기본 텍스트, 삭제 버튼 제거
+    diaryText.textContent = "오늘 하루 어때요?";
+    const deleteBtn = document.getElementById("diaryDeleteBtn");
+    if (deleteBtn) deleteBtn.remove();
   }
 }
 
-/* =========================
-   Todo CRUD
-========================= */
+function deleteDiary() {
+  delete diaries[selectedDate];
+  saveDiariesToStorage();
+  renderDiary();
+  diaryInputWrapper.classList.add("hidden");
+}
+
+// ===== 소감 저장 =====
+function saveDiary() {
+  const text = diaryInput.value.trim();
+  if (text === "") return;
+
+  diaries[selectedDate] = text; // 날짜를 키로 소감 저장
+  saveDiariesToStorage();
+  renderDiary();
+
+  // 입력창 닫기
+  diaryInputWrapper.classList.add("hidden");
+  diaryInput.value = "";
+}
+
+// ===== ID 생성 =====
+function generateId() {
+  return Date.now();
+}
+
+// ===== Todo CRUD =====
+
 function addTodo() {
   const text = todoInput.value.trim();
-
-  if (!text) {
-    errorMessage.textContent = "할 일을 입력해주세요.";
+  if (text === "") {
+    errorMessage.classList.remove("hidden");
+    todoInput.focus();
     return;
   }
+  errorMessage.classList.add("hidden");
 
-  errorMessage.textContent = "";
-
-  todos.push({
-    id: todoId++,
-    text,
-    completed: false,
-    date: formatDate(selectedDate)
-  });
-
+  todos.push({ id: generateId(), text, completed: false, date: selectedDate });
   todoInput.value = "";
-
-  saveToLocalStorage();
-  renderWeekView();
-  renderTodos();
+  saveTodosToStorage();
+  renderCalendar();
+  renderTodoList();
 }
 
 function deleteTodo(id) {
-  todos = todos.filter(t => t.id !== id);
-  saveToLocalStorage();
-  renderWeekView();
-  renderTodos();
+  todos = todos.filter((t) => t.id !== id);
+  saveTodosToStorage();
+  renderCalendar();
+  renderTodoList();
 }
 
 function toggleComplete(id) {
-  todos = todos.map(t =>
-    t.id === id ? { ...t, completed: !t.completed } : t
+  todos = todos.map((t) =>
+    t.id === id ? { ...t, completed: !t.completed } : t,
   );
-
-  saveToLocalStorage();
-  renderWeekView();
-  renderTodos();
+  saveTodosToStorage();
+  renderCalendar();
+  renderTodoList();
 }
 
-function editTodo(id) {
-  const todo = todos.find(t => t.id === id);
-  const newText = prompt("수정", todo.text);
+function enableEditMode(id) {
+  const item = document.querySelector(`[data-id="${id}"]`);
+  const span = item.querySelector(".todo-text");
+  const btns = item.querySelector(".button-group");
 
-  if (newText?.trim()) {
-    todo.text = newText.trim();
-    saveToLocalStorage();
-    renderWeekView();
-    renderTodos();
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "todo-edit-input";
+  input.value = span.textContent;
+  span.replaceWith(input);
+  input.focus();
+
+  btns.innerHTML = `
+    <button class="btn btn-save" onclick="saveEdit(${id})">저장</button>
+    <button class="btn btn-delete" onclick="deleteTodo(${id})">삭제</button>
+  `;
+}
+
+function saveEdit(id) {
+  const item = document.querySelector(`[data-id="${id}"]`);
+  const input = item.querySelector(".todo-edit-input");
+  const newText = input.value.trim();
+  if (newText === "") {
+    input.focus();
+    return;
+  }
+
+  todos = todos.map((t) => (t.id === id ? { ...t, text: newText } : t));
+  saveTodosToStorage();
+  renderTodoList();
+}
+
+// ===== 날짜 선택 =====
+function selectDate(dateKey) {
+  selectedDate = dateKey;
+  renderCalendar();
+  renderSelectedDate();
+  renderTodoList();
+  renderDiary(); // 날짜 바뀌면 소감도 업데이트
+  // 소감 입력창 닫기
+  diaryInputWrapper.classList.add("hidden");
+}
+
+// ===== 캘린더 렌더링 (뷰에 따라 분기) =====
+function renderCalendar() {
+  if (currentView === "week") {
+    renderWeekGrid();
+  } else {
+    renderMonthGrid();
   }
 }
 
-/* =========================
-   필터 + 날짜 필터
-========================= */
-function getFilteredTodos() {
-  return todos.filter(todo => {
-    const matchDate = todo.date === formatDate(selectedDate);
-    if (!matchDate) return false;
+// ===== 주간 그리드 렌더링 =====
+function renderWeekGrid() {
+  const weekDates = getWeekDates(weekOffset);
+  const todayKey = formatDateKey(new Date());
+  const DAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"];
 
-    if (currentFilter === "active") return !todo.completed;
-    if (currentFilter === "completed") return todo.completed;
+  weekGrid.innerHTML = "";
 
-    return true;
+  weekDates.forEach((dateKey, index) => {
+    const [, , day] = dateKey.split("-").map(Number);
+    const count = todos.filter((t) => t.date === dateKey).length;
+
+    const cell = document.createElement("div");
+    cell.className = "day-cell";
+    if (dateKey === todayKey) cell.classList.add("today");
+    if (dateKey === selectedDate) cell.classList.add("selected");
+    if (index === 6) cell.classList.add("sunday");
+    if (index === 5) cell.classList.add("saturday");
+
+    cell.innerHTML = `
+      <span class="day-name">${DAY_NAMES[index]}</span>
+      <span class="day-number">${day}</span>
+      <span class="day-count">${count}</span>
+    `;
+    cell.addEventListener("click", () => selectDate(dateKey));
+    weekGrid.appendChild(cell);
   });
 }
 
-/* =========================
-   렌더링
-========================= */
-function renderTodos() {
+// ===== 월간 그리드 렌더링 =====
+function renderMonthGrid() {
+  const today = new Date();
+  // monthOffset 기준 해당 월 계산
+  const base = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  const year = base.getFullYear();
+  const month = base.getMonth(); // 0-indexed
+
+  // 제목 업데이트
+  monthTitle.textContent = `${year}년 ${month + 1}월`;
+
+  const todayKey = formatDateKey(new Date());
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  // 월요일 시작 기준 첫 날의 요일 오프셋 계산
+  // getDay(): 0(일)~6(토) → 월요일 기준으로 변환
+  const startOffset = (firstDay.getDay() + 6) % 7;
+
+  monthGrid.innerHTML = "";
+
+  // 빈 셀 (이전 달)
+  for (let i = 0; i < startOffset; i++) {
+    const empty = document.createElement("div");
+    empty.className = "month-cell empty";
+    monthGrid.appendChild(empty);
+  }
+
+  // 날짜 셀
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateKey = formatDateKey(new Date(year, month, d));
+    const count = todos.filter((t) => t.date === dateKey).length;
+    const dayOfWeek = new Date(year, month, d).getDay(); // 0(일)~6(토)
+
+    const cell = document.createElement("div");
+    cell.className = "month-cell";
+    if (dateKey === todayKey) cell.classList.add("today");
+    if (dateKey === selectedDate) cell.classList.add("selected");
+    if (dayOfWeek === 0) cell.classList.add("sunday");
+    if (dayOfWeek === 6) cell.classList.add("saturday");
+
+    cell.innerHTML = `
+      <span>${d}</span>
+      ${count > 0 ? '<div class="month-dot"></div>' : ""}
+    `;
+    cell.addEventListener("click", () => selectDate(dateKey));
+    monthGrid.appendChild(cell);
+  }
+}
+
+// ===== 선택된 날짜 텍스트 =====
+function renderSelectedDate() {
+  const todayKey = formatDateKey(new Date());
+  selectedDateDisplay.textContent = formatDateDisplay(selectedDate);
+  if (selectedDate === todayKey) {
+    selectedDateDisplay.classList.add("is-today");
+  } else {
+    selectedDateDisplay.classList.remove("is-today");
+  }
+}
+
+// ===== Todo 목록 렌더링 =====
+function renderTodoList() {
   todoList.innerHTML = "";
 
-  getFilteredTodos().forEach(todo => {
+  const todosForDate = todos.filter((t) => t.date === selectedDate);
+  const filtered = todosForDate.filter((t) => {
+    if (activeFilter === "active") return !t.completed;
+    if (activeFilter === "completed") return t.completed;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    emptyState.classList.remove("hidden");
+    if (activeFilter === "completed") {
+      emptyState.innerHTML = `
+        <img class="empty-video" src="https://i.namu.wiki/i/rj0cRXAlfY55BFjhK4Wt5AMJ9Y1YQYLlrNs5vvxYQ6p6XtFrwjdKp6XRXgL6Y6FANaIKyjvhs14HJALLUKEsqQ.gif" alt="달성" />
+        <p>아직 할 일이 많은가요? 😥 조금만 힘내요!</p>
+      `;
+    } else if (activeFilter === "active") {
+      emptyState.innerHTML = `
+        <img class="empty-video" src="https://i.namu.wiki/i/qVwTXtV7j-sRogzkSGBTiTroRM6KETKka_xUvJIDHYcIOVjGCEQkrpGoaW-_sCQTZS-Nih1eNjJJ9kFhcRfcTA.gif" alt="할일없음" />
+        <p>해야 할 일을 다 하셨군요🎉 수고하셨습니다✨</p>
+      `;
+    } else {
+      emptyState.innerHTML = `
+        <img class="empty-video" src="https://i.namu.wiki/i/rBVUKzbEhG-vgEU7lZirErWrNyTm_TRS4_Y2O_dOBlZy6H3DnF85BZL7voglz5hPViUrqL8DqpP19w_Ofl7A6Q.gif" alt="비어있음" />
+        <p>할 일이 없어요🤔</p>
+      `;
+    }
+  } else {
+    emptyState.classList.add("hidden");
+  }
+
+  filtered.forEach((todo) => {
     const li = document.createElement("li");
-    li.className = "todo-item";
-
-    const text = document.createElement("span");
-    text.textContent = todo.text;
-
-    if (todo.completed) text.classList.add("completed");
-
-    const actions = document.createElement("div");
-
-    const c = document.createElement("button");
-    c.textContent = "완료";
-    c.onclick = () => toggleComplete(todo.id);
-
-    const e = document.createElement("button");
-    e.textContent = "수정";
-    e.onclick = () => editTodo(todo.id);
-
-    const d = document.createElement("button");
-    d.textContent = "삭제";
-    d.onclick = () => deleteTodo(todo.id);
-
-    actions.append(c, e, d);
-    li.append(text, actions);
-
+    li.className = `todo-item ${todo.completed ? "completed" : ""}`;
+    li.dataset.id = todo.id;
+    li.innerHTML = `
+      <input type="checkbox" class="todo-checkbox"
+        ${todo.completed ? "checked" : ""}
+        onchange="toggleComplete(${todo.id})" />
+      <span class="todo-text">${todo.text}</span>
+      <div class="button-group">
+        <button class="btn btn-edit" onclick="enableEditMode(${todo.id})">수정</button>
+        <button class="btn btn-delete" onclick="deleteTodo(${todo.id})">삭제</button>
+      </div>
+    `;
     todoList.appendChild(li);
   });
 }
 
-/* =========================
-   주 이동
-========================= */
-function changeWeek(offset) {
-  weekStartDate.setDate(weekStartDate.getDate() + offset * 7);
-  renderWeekView();
-}
+// ===== 이벤트 리스너 =====
 
-/* =========================
-   탭
-========================= */
-tabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    currentFilter = tab.dataset.filter;
-    tabs.forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-    renderTodos();
+// Todo 추가
+addButton.addEventListener("click", addTodo);
+todoInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addTodo();
+});
+todoInput.addEventListener("input", () => {
+  if (todoInput.value.trim()) errorMessage.classList.add("hidden");
+});
+
+// 주간 이전/다음
+prevWeekButton.addEventListener("click", () => {
+  weekOffset--;
+  renderWeekGrid();
+});
+nextWeekButton.addEventListener("click", () => {
+  weekOffset++;
+  renderWeekGrid();
+});
+
+// 월간 이전/다음
+prevMonthButton.addEventListener("click", () => {
+  monthOffset--;
+  renderMonthGrid();
+});
+nextMonthButton.addEventListener("click", () => {
+  monthOffset++;
+  renderMonthGrid();
+});
+
+// 뷰 전환 (주간 ↔ 월간)
+weekViewBtn.addEventListener("click", () => {
+  currentView = "week";
+  weekViewBtn.classList.add("active");
+  monthViewBtn.classList.remove("active");
+  weekView.classList.remove("hidden");
+  monthView.classList.add("hidden");
+  renderWeekGrid();
+});
+
+monthViewBtn.addEventListener("click", () => {
+  currentView = "month";
+  monthViewBtn.classList.add("active");
+  weekViewBtn.classList.remove("active");
+  monthView.classList.remove("hidden");
+  weekView.classList.add("hidden");
+  renderMonthGrid();
+});
+
+// 필터 탭
+filterButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    filterButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeFilter = btn.dataset.filter;
+    renderTodoList();
   });
 });
 
-/* =========================
-   이벤트
-========================= */
-addButton.addEventListener("click", addTodo);
+// 소감 수정 버튼 클릭 → 입력창 토글
+diaryEditBtn.addEventListener("click", () => {
+  diaryInputWrapper.classList.toggle("hidden");
+  if (!diaryInputWrapper.classList.contains("hidden")) {
+    // 기존 소감 불러오기
+    diaryInput.value = diaries[selectedDate] || "";
+    diaryInput.focus();
+  }
+});
 
-prevWeekBtn.addEventListener("click", () => changeWeek(-1));
-nextWeekBtn.addEventListener("click", () => changeWeek(1));
+// 소감 저장 버튼
+diarySaveBtn.addEventListener("click", saveDiary);
 
-/* =========================
-   초기 실행
-========================= */
-loadFromLocalStorage();
-selectedDate = new Date();
-weekStartDate = getWeekStart(new Date());
+// Enter 키로 소감 저장
+diaryInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveDiary();
+});
 
-renderWeekView();
-renderTodos();
+// ===== 초기화 =====
+renderWeekGrid();
+renderSelectedDate();
+renderTodoList();
+renderDiary();

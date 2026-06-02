@@ -1,44 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Todo App</title>
-  <link rel="stylesheet" href="style.css"/>
-</head>
-<body>
-  <div class="app-container">
-    <h1 class="title">Todo List</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>✨Todo✨</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- 헤더 -->
+      <header class="app-header">
+        <div class="header-inner">
+          <!-- 춘식이 + 말풍선 -->
+          <div class="chunsik-wrapper">
+            <img
+              src="https://t1.daumcdn.net/brunch/service/user/cnoC/image/5mazSO7Ouexw-TZN0tmlrXXUj30.JPG"
+              alt="춘식이"
+              class="chunsik-img"
+            />
+            <!-- 말풍선 소감 영역 -->
+            <div class="speech-bubble" id="speechBubble">
+              <span id="diaryText" class="diary-text">오늘 하루 어땠냥?</span>
+              <button class="diary-edit-btn" id="diaryEditBtn">✏️</button>
+            </div>
+          </div>
+          <div class="header-text">
+            <h1 class="app-title">춘식이의 일정</h1>
+            <p class="app-subtitle">오늘의 할 일은 무엇일까?🐾</p>
+          </div>
+        </div>
 
-    <!-- 📅 주간 네비게이션 -->
-    <div class="week-header">
-      <button id="prevWeekBtn">◀</button>
-      <span id="weekRangeText"></span>
-      <button id="nextWeekBtn">▶</button>
+        <!-- 소감 입력창 (기본 숨김) -->
+        <div id="diaryInputWrapper" class="diary-input-wrapper hidden">
+          <input
+            type="text"
+            id="diaryInput"
+            class="diary-input"
+            placeholder="오늘 하루 한마디를 남겨봐!🐾"
+            maxlength="50"
+          />
+          <button id="diarySaveBtn" class="diary-save-btn">저장</button>
+        </div>
+      </header>
+
+      <!-- 뷰 전환 버튼 -->
+      <div class="view-toggle">
+        <button class="view-btn active" id="weekViewBtn">주간</button>
+        <button class="view-btn" id="monthViewBtn">월간</button>
+      </div>
+
+      <!-- 주간 뷰 -->
+      <section class="week-nav" id="weekView">
+        <button id="prevWeekButton" class="week-nav-btn">‹</button>
+        <div id="weekGrid" class="week-grid"></div>
+        <button id="nextWeekButton" class="week-nav-btn">›</button>
+      </section>
+
+      <!-- 월간 뷰 -->
+      <section class="month-view hidden" id="monthView">
+        <div class="month-header">
+          <button id="prevMonthButton" class="week-nav-btn">‹</button>
+          <span id="monthTitle" class="month-title"></span>
+          <button id="nextMonthButton" class="week-nav-btn">›</button>
+        </div>
+        <div class="month-day-names">
+          <span>월</span><span>화</span><span>수</span> <span>목</span
+          ><span>금</span>
+          <span class="saturday">토</span>
+          <span class="sunday">일</span>
+        </div>
+        <div id="monthGrid" class="month-grid"></div>
+      </section>
+
+      <!-- 선택된 날짜 표시 -->
+      <div id="selectedDateDisplay" class="selected-date-display"></div>
+
+      <!-- 상태 필터 탭 -->
+      <section class="filter-tabs">
+        <button class="filter-btn active" data-filter="all">전체보기</button>
+        <button class="filter-btn" data-filter="active">해야할 일</button>
+        <button class="filter-btn" data-filter="completed">달성한 것</button>
+      </section>
+
+      <!-- 입력 영역 -->
+      <section class="input-section">
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="todoInput"
+            class="todo-input"
+            placeholder="할 일을 입력해주세요"
+            maxlength="100"
+          />
+          <button id="addButton" class="add-button">+ 추가</button>
+        </div>
+        <p id="errorMessage" class="error-message hidden">
+          🐱 할 일을 입력해주세요!!
+        </p>
+      </section>
+
+      <!-- Todo 목록 -->
+      <section class="list-section">
+        <ul id="todoList" class="todo-list"></ul>
+        <div id="emptyState" class="empty-state hidden">
+          <!-- app.js에서 탭마다 자동으로 채워줌 -->
+        </div>
+      </section>
     </div>
-
-    <!-- 📆 주간 뷰 -->
-    <div id="weekView" class="week-view"></div>
-
-    <!-- 입력 -->
-    <div class="input-section">
-      <input type="text" id="todoInput" placeholder="할 일을 입력하세요" />
-      <button id="addButton">추가</button>
-    </div>
-
-    <p id="errorMessage" class="error-message"></p>
-
-    <!-- 필터 -->
-    <div class="filter-tabs">
-      <button class="tab active" data-filter="all">전체</button>
-      <button class="tab" data-filter="active">진행 중</button>
-      <button class="tab" data-filter="completed">완료</button>
-    </div>
-
-    <!-- 리스트 -->
-    <ul id="todoList" class="todo-list"></ul>
-  </div>
-
-  <script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>

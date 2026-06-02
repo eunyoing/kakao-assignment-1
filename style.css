@@ -1,137 +1,621 @@
-body {
+/* ===== 기본 스타일 ===== */
+* {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f7f7fb;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: #f5f5f7;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100vh;
+  align-items: flex-start;
+  padding: 40px 16px;
 }
 
+/* ===== 앱 컨테이너 ===== */
 .app-container {
-  width: 420px;
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  background-color: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 560px;
+  padding: 32px 28px;
 }
 
-.title {
-  text-align: center;
-  color: #672be0;
+/* ===== 헤더 ===== */
+.app-header {
+  margin-bottom: 20px;
 }
 
-/* 📅 주간 헤더 */
-.week-header {
+.header-inner {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: #f1ecff;
-  padding: 10px;
-  border-radius: 10px;
-  margin: 12px 0;
-  color: #672be0;
-  font-weight: bold;
+  gap: 16px;
+  margin-bottom: 10px;
 }
 
-.week-header button {
+/* 춘식이 + 말풍선 묶음 */
+.chunsik-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.chunsik-img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* 말풍선 */
+.speech-bubble {
+  position: absolute;
+  top: -10px;
+  left: 140px;
+  background: #f0f0f0;
+  border-radius: 14px;
+  padding: 8px 12px;
+  min-width: 160px;
+  max-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+/* 말풍선 꼬리 */
+.speech-bubble::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 14px;
+  border: 6px solid transparent;
+  border-right-color: #f0f0f0;
+}
+
+.diary-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1d1d1f;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diary-edit-btn {
   background: none;
   border: none;
-  color: #672be0;
-  font-size: 16px;
   cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
-/* 📆 주간 뷰 */
-.week-view {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  gap: 6px;
+.diary-edit-btn:hover {
+  opacity: 1;
 }
 
-.day {
+/* 헤더 텍스트 */
+.header-text {
   flex: 1;
-  text-align: center;
-  padding: 8px;
-  border-radius: 8px;
-  background: #f5f5f5;
+}
+
+.app-title {
+  font-size: 40px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 4px;
+}
+
+.app-subtitle {
+  font-size: 13px;
+  color: #8e8e93;
+}
+
+/* 소감 입력창 */
+.diary-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.diary-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid #fae100;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+  background: #fffde7;
+}
+
+.diary-save-btn {
+  padding: 10px 16px;
+  background: #fae100;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.diary-save-btn:hover {
+  background: #f0d800;
+}
+
+/* ===== 뷰 전환 버튼 ===== */
+.view-toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.view-btn {
+  flex: 1;
+  padding: 7px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8e8e93;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-btn.active {
+  background: #ffffff;
+  color: #1d1d1f;
+  font-weight: 700;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== 주간 뷰 ===== */
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.week-nav-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #1d1d1f;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+  flex-shrink: 0;
+}
+
+.week-nav-btn:hover {
+  background-color: #fae100;
+}
+
+.week-grid {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  justify-content: space-between;
+}
+
+.day-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.15s;
+  min-width: 0;
+}
+
+.day-cell:hover {
+  background-color: #fff9c4;
+}
+.day-cell.selected {
+  background-color: #fae100;
+  border-color: #f0d800;
+}
+.day-cell.today {
+  border-color: #fae100;
+}
+.day-cell.today .day-number {
+  font-weight: 700;
+  color: #b8860b;
+}
+.day-cell.selected.today .day-number {
+  color: #1d1d1f;
+}
+
+.day-name {
+  font-size: 11px;
+  color: #8e8e93;
+  font-weight: 500;
+}
+.day-number {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.day-cell.sunday .day-name,
+.day-cell.sunday .day-number {
+  color: #ff3b30;
+}
+
+.day-cell.saturday .day-name,
+.day-cell.saturday .day-number {
+  color: #007fff;
+}
+
+.day-cell.selected.sunday .day-name,
+.day-cell.selected.sunday .day-number {
+  color: #1d1d1f;
+}
+
+.day-cell.selected.saturday .day-name,
+.day-cell.selected.saturday .day-number {
+  color: #1d1d1f;
+}
+
+.day-count {
+  font-size: 11px;
+  background-color: #e8e8ed;
+  color: #555;
+  border-radius: 10px;
+  padding: 1px 6px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.day-cell.selected .day-count {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #1d1d1f;
+}
+
+/* ===== 월간 뷰 ===== */
+.month-view {
+  margin-bottom: 12px;
+}
+
+.month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.month-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.month-day-names {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
   font-size: 12px;
+  font-weight: 600;
+  color: #8e8e93;
+  margin-bottom: 6px;
+  padding: 0 2px;
 }
 
-.day.active {
-  background: #672be0;
-  color: white;
+.month-day-names .saturday {
+  color: #007fff;
+}
+.month-day-names .sunday {
+  color: #ff3b30;
 }
 
-.day.today {
-  border: 2px solid #672be0;
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
 }
 
-/* 투두 개수 */
-.count {
-  font-size: 10px;
-  margin-top: 4px;
+/* 월간 날짜 셀 */
+.month-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.15s;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+  position: relative;
 }
 
-/* 입력 */
+.month-cell:hover {
+  background-color: #fff9c4;
+}
+.month-cell.selected {
+  background-color: #fae100;
+  border-color: #f0d800;
+}
+.month-cell.today {
+  border-color: #fae100;
+  font-weight: 700;
+  color: #b8860b;
+}
+.month-cell.selected.today {
+  color: #1d1d1f;
+}
+.month-cell.sunday {
+  color: #ff3b30;
+}
+.month-cell.saturday {
+  color: #007fff;
+}
+.month-cell.selected.sunday,
+.month-cell.selected.saturday {
+  color: #1d1d1f;
+}
+.month-cell.other-month {
+  color: #c7c7cc;
+}
+
+/* 월간 뷰 Todo 개수 점 */
+.month-dot {
+  width: 5px;
+  height: 5px;
+  background: #b8860b;
+  border-radius: 50%;
+}
+
+.month-cell.selected .month-dot {
+  background: #1d1d1f;
+}
+
+/* 빈 셀 (날짜 없는 칸) */
+.month-cell.empty {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ===== 선택된 날짜 표시 ===== */
+.selected-date-display {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 16px;
+  padding: 8px;
+  background: #fafafa;
+  border-radius: 10px;
+  border: 1.5px solid #e8e8e8;
+  transition: background-color 0.2s;
+}
+
+.selected-date-display.is-today {
+  background: #fff9c4;
+  border-color: #f0d800;
+}
+
+/* ===== 상태 필터 탭 ===== */
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.filter-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8e8e93;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  background: #ffffff;
+  color: #1d1d1f;
+  font-weight: 700;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+.filter-btn:hover:not(.active) {
+  color: #1d1d1f;
+}
+
+/* ===== 입력 영역 ===== */
 .input-section {
+  margin-bottom: 20px;
+}
+
+.input-wrapper {
   display: flex;
   gap: 8px;
 }
 
-input {
+.todo-input {
   flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #1d1d1f;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
-button {
-  background: #672be0;
-  color: white;
+.todo-input:focus {
+  border-color: #fae100;
+  background: #fff;
+}
+
+.add-button {
+  padding: 12px 20px;
+  background-color: #fae100;
+  color: #1d1d1f;
   border: none;
-  padding: 10px;
-  border-radius: 8px;
-}
-
-/* 필터 */
-.filter-tabs {
-  display: flex;
-  gap: 6px;
-  margin-top: 16px;
-}
-
-.tab {
-  flex: 1;
-  background: #eee;
-  border: none;
-  padding: 6px;
-  border-radius: 8px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+  white-space: nowrap;
 }
 
-.tab.active {
-  background: #672be0;
-  color: white;
+.add-button:hover {
+  background-color: #f0d800;
+}
+.add-button:active {
+  transform: scale(0.97);
 }
 
-/* 리스트 */
+/* ===== 에러 메시지 ===== */
+.error-message {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #ff3b30;
+  padding-left: 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* ===== Todo 목록 ===== */
 .todo-list {
   list-style: none;
-  padding: 0;
-  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
+/* ===== Todo 항목 ===== */
 .todo-item {
   display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 14px;
+  transition: box-shadow 0.2s;
 }
 
-.completed {
+.todo-item:hover {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+}
+.todo-item.completed {
+  background: #f0f0f0;
+  border-color: #ddd;
+}
+.todo-item.completed .todo-text {
   text-decoration: line-through;
-  color: #aaa;
+  color: #b0b0b0;
+}
+
+.todo-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #fae100;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 15px;
+  color: #1d1d1f;
+  word-break: break-all;
+}
+
+.todo-edit-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1.5px solid #fae100;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+}
+
+/* ===== 버튼 그룹 ===== */
+.button-group {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn:hover {
+  opacity: 0.8;
+}
+.btn-edit {
+  background-color: #e8e8ed;
+  color: #1d1d1f;
+}
+.btn-save {
+  background-color: #fae100;
+  color: #1d1d1f;
+}
+.btn-delete {
+  background-color: #ffe5e5;
+  color: #ff3b30;
+}
+
+/* ===== 빈 상태 ===== */
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+  color: #8e8e93;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+.empty-video {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  border-radius: 16px;
+  margin-bottom: 12px;
 }
