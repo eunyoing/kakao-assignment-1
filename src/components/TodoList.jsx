@@ -20,15 +20,19 @@ function TodoList({ todos, onDelete, onToggle, onEdit, activeFilter }) {
     const content = emptyContent[activeFilter] || emptyContent.all;
 
     return (
-      <div className='empty-state'>
-        <img className='empty-video' src={content.gif} alt='빈 상태' />
-        <p>{content.text}</p>
+      <div className='flex flex-col items-center py-10 text-gray-400'>
+        <img
+          className='w-40 h-40 object-contain rounded-2xl mb-3'
+          src={content.gif}
+          alt='빈 상태'
+        />
+        <p className='text-sm'>{content.text}</p>
       </div>
     );
   }
 
   return (
-    <ul className='todo-list'>
+    <ul className='flex flex-col gap-3'>
       {todos.map((todo) => (
         <TodoItem
           key={todo.id}

@@ -9,12 +9,17 @@ function App() {
   // todos(기존 할일 목록) 변수와 , setTodos 함수를 react 가 자동으로 만들어준다.
   // 앱 처음 켤 때 브라우저에서 불러온다!
   const [todos, setTodos] = useState(() => {
-    const saved = localStorage.getItem("todos");
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem("todos");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [activeFilter, setActiveFilter] = useState("all");
   // 선택된 날짜 상태 (처음엔 오늘 날짜)
   const [selectedDate, setSelectedDate] = useState(formatDateKey(new Date()));
+  const validateText = (text) => text.trim() !== "";
 
   //✨todos가 바뀔때마다 브라우저에 저장한다.
   useEffect(() => {
@@ -57,29 +62,28 @@ function App() {
     });
 
   return (
-    <div className='app-container'>
-      <Header />
-      {/* Calendar 컴포넌트 */}
-      <Calendar
-        selectedDate={selectedDate}
-        onDateSelect={setSelectedDate}
-        todos={todos}
-      />
-      {/* TodoFilter 컴포넌트 */}
-      <TodoFilter
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-      />
-      {/* TodoInput 컴포넌트 */}
-      <TodoInput onAdd={addTodo} />
-      {/* TodoList 컴포넌트 activeFilter 추가되었음 */}
-      <TodoList
-        todos={filteredTodos}
-        onDelete={deleteTodo}
-        onToggle={toggleComplete}
-        onEdit={editTodo}
-        activeFilter={activeFilter}
-      />
+    <div className='min-h-screen bg-gray-100 flex justify-center items-start py-10 px-4'>
+      <div className='bg-white rounded-2xl shadow-lg w-full max-w-xl p-8'>
+        <Header />
+        <Calendar
+          selectedDate={selectedDate}
+          onDateSelect={setSelectedDate}
+          todos={todos}
+        />
+        <TodoFilter
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+        <TodoInput onAdd={addTodo} validate={validateText} />
+        <TodoList
+          todos={filteredTodos}
+          onDelete={deleteTodo}
+          onToggle={toggleComplete}
+          onEdit={editTodo}
+          activeFilter={activeFilter}
+          validate={validateText}
+        />
+      </div>
     </div>
   );
 }

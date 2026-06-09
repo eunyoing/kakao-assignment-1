@@ -6,12 +6,17 @@ function TodoFilter({ activeFilter, onFilterChange }) {
   ];
 
   return (
-    <div className='filter-tabs'>
+    <div className='flex gap-2 mb-4 bg-gray-100 rounded-xl p-1'>
       {filters.map((f) => (
         <button
           key={f.key}
           onClick={() => onFilterChange(f.key)}
-          className={`filter-btn ${activeFilter === f.key ? "active" : ""}`}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all
+            ${
+              activeFilter === f.key
+                ? "bg-white text-gray-900 font-bold shadow-sm"
+                : "text-gray-400 hover:text-gray-900"
+            }`}
         >
           {f.label}
         </button>
