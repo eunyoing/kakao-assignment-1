@@ -1,5 +1,5 @@
 "use client";
-
+import { createTodo } from "@/app/actions";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -15,11 +15,7 @@ export default function NewTodoPage() {
       return;
     }
 
-    await fetch("http://localhost:8000/todos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, completed: false }),
-    });
+    await createTodo(title);
 
     router.push("/todos");
   }

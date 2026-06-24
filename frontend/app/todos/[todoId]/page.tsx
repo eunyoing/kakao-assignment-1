@@ -1,5 +1,5 @@
 "use client";
-
+import { updateTodo, deleteTodo } from "@/app/actions";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -32,18 +32,13 @@ export default function EditTodoPage(props: {
       setError(true);
       return;
     }
-    await fetch(`http://localhost:8000/todos/${params.todoId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, completed }),
-    });
+    await updateTodo(Number(params.todoId), title, completed);
+
     router.push("/todos");
   }
 
   async function handleDelete() {
-    await fetch(`http://localhost:8000/todos/${params.todoId}`, {
-      method: "DELETE",
-    });
+    await deleteTodo(Number(params.todoId));
     router.push("/todos");
   }
 
